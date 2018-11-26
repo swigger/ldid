@@ -1,7 +1,2 @@
-ios
-out
-ldid
-ldid.deb
-debs
-*.o
-_
+ios/
+macos/

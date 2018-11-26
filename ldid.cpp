@@ -2378,11 +2378,15 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> files;
 
     if (argc == 1) {
-        fprintf(stderr, "usage: %s -S[entitlements.xml] <binary>\n", argv[0]);
-        fprintf(stderr, "   %s -e MobileSafari\n", argv[0]);
-        fprintf(stderr, "   %s -S cat\n", argv[0]);
-        fprintf(stderr, "   %s -Stfp.xml gdb\n", argv[0]);
-        exit(0);
+usage:
+		const char * a = argv[0];
+        fprintf(stderr,
+				"usage:\n"
+				"   %s -S[entitlements.xml] <binary>\n"
+				"   %s -e MobileSafari\n"
+				"   %s -S cat\n"
+				"   %s -Stfp.xml gdb\n", a,a,a,a);
+        return 1;
     }
 
     for (int argi(1); argi != argc; ++argi)
@@ -2484,9 +2488,7 @@ int main(int argc, char *argv[]) {
     _assert(flag_S || key.empty());
     _assert(flag_S || flag_I == NULL);
 
-    if (files.empty()) usage: {
-        exit(0);
-    }
+    if (files.empty()) goto usage;
 
     size_t filei(0), filee(0);
     _foreach (file, files) try {
