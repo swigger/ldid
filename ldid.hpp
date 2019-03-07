@@ -50,10 +50,10 @@ FunctorImpl<decltype(&Function_::operator())> fun(const Function_ &value) {
 
 class Folder {
   public:
-    virtual void Save(const std::string &path, const void *flag, const Functor<void (std::streambuf &)> &code) = 0;
-    virtual bool Look(const std::string &path) = 0;
-    virtual void Open(const std::string &path, const Functor<void (std::streambuf &, const void *)> &code) = 0;
-    virtual void Find(const std::string &path, const Functor<void (const std::string &, const Functor<void (const Functor<void (std::streambuf &, std::streambuf &)> &)> &)> &code, const Functor<void (const std::string &, const Functor<std::string ()> &)> &link) = 0;
+    virtual void Save(const std::string &path, bool edit, const void *flag, const Functor<void (std::streambuf &)> &code) = 0;
+    virtual bool Look(const std::string &path) const = 0;
+    virtual void Open(const std::string &path, const Functor<void (std::streambuf &, size_t, const void *)> &code) const = 0;
+    virtual void Find(const std::string &path, const Functor<void (const std::string &)> &code, const Functor<void (const std::string &, const Functor<std::string ()> &)> &link) const = 0;
 };
 
 class DiskFolder :
@@ -63,18 +63,20 @@ class DiskFolder :
     const std::string path_;
     std::map<std::string, std::string> commit_;
 
-    std::string Path(const std::string &path);
+  protected:
+    std::string Path(const std::string &path) const;
 
-    void Find(const std::string &root, const std::string &base, const Functor<void (const std::string &, const Functor<void (const Functor<void (std::streambuf &, std::streambuf &)> &)> &)> &code, const Functor<void (const std::string &, const Functor<std::string ()> &)> &link);
+  private:
+    void Find(const std::string &root, const std::string &base, const Functor<void (const std::string &)> &code, const Functor<void (const std::string &, const Functor<std::string ()> &)> &link) const;
 
   public:
     DiskFolder(const std::string &path);
     ~DiskFolder();
 
-    virtual void Save(const std::string &path, const void *flag, const Functor<void (std::streambuf &)> &code);
-    virtual bool Look(const std::string &path);
-    virtual void Open(const std::string &path, const Functor<void (std::streambuf &, const void *)> &code);
-    virtual void Find(const std::string &path, const Functor<void (const std::string &, const Functor<void (const Functor<void (std::streambuf &, std::streambuf &)> &)> &)> &code, const Functor<void (const std::string &, const Functor<std::string ()> &)> &link);
+    virtual void Save(const std::string &path, bool edit, const void *flag, const Functor<void (std::streambuf &)> &code);
+    virtual bool Look(const std::string &path) const;
+    virtual void Open(const std::string &path, const Functor<void (std::streambuf &, size_t, const void *)> &code) const;
+    virtual void Find(const std::string &path, const Functor<void (const std::string &)> &code, const Functor<void (const std::string &, const Functor<std::string ()> &)> &link) const;
 };
 
 class SubFolder :
@@ -87,45 +89,37 @@ class SubFolder :
   public:
     SubFolder(Folder &parent, const std::string &path);
 
-    virtual void Save(const std::string &path, const void *flag, const Functor<void (std::streambuf &)> &code);
-    virtual bool Look(const std::string &path);
-    virtual void Open(const std::string &path, const Functor<void (std::streambuf &, const void *)> &code);
-    virtual void Find(const std::string &path, const Functor<void (const std::string &, const Functor<void (const Functor<void (std::streambuf &, std::streambuf &)> &)> &)> &code, const Functor<void (const std::string &, const Functor<std::string ()> &)> &link);
+    virtual void Save(const std::string &path, bool edit, const void *flag, const Functor<void (std::streambuf &)> &code);
+    virtual bool Look(const std::string &path) const;
+    virtual void Open(const std::string &path, const Functor<void (std::streambuf &, size_t, const void *)> &code) const;
+    virtual void Find(const std::string &path, const Functor<void (const std::string &)> &code, const Functor<void (const std::string &, const Functor<std::string ()> &)> &link) const;
 };
 
 class UnionFolder :
     public Folder
 {
   private:
-    class StringBuffer :
-        public std::stringbuf
-    {
-      public:
-        StringBuffer() {
-        }
-
-        StringBuffer(const StringBuffer &rhs) :
-            std::stringbuf(rhs.str())
-        {
-        }
+    struct Reset {
+        const void *flag_;
+        std::streambuf *data_;
     };
 
     Folder &parent_;
     std::set<std::string> deletes_;
 
     std::map<std::string, std::string> remaps_;
-    std::map<std::string, std::pair<StringBuffer, const void *>> resets_;
+    mutable std::map<std::string, Reset> resets_;
 
-    std::string Map(const std::string &path);
-    void Map(const std::string &path, const Functor<void (const std::string &, const Functor<void (const Functor<void (std::streambuf &, std::streambuf &)> &)> &)> &code, const std::string &file, const Functor<void (const Functor<void (std::streambuf &, const void *)> &)> &save);
+    std::string Map(const std::string &path) const;
+    void Map(const std::string &path, const Functor<void (const std::string &)> &code, const std::string &file, const Functor<void (const Functor<void (std::streambuf &, size_t, const void *)> &)> &save) const;
 
   public:
     UnionFolder(Folder &parent);
 
-    virtual void Save(const std::string &path, const void *flag, const Functor<void (std::streambuf &)> &code);
-    virtual bool Look(const std::string &path);
-    virtual void Open(const std::string &path, const Functor<void (std::streambuf &, const void *)> &code);
-    virtual void Find(const std::string &path, const Functor<void (const std::string &, const Functor<void (const Functor<void (std::streambuf &, std::streambuf &)> &)> &)> &code, const Functor<void (const std::string &, const Functor<std::string ()> &)> &link);
+    virtual void Save(const std::string &path, bool edit, const void *flag, const Functor<void (std::streambuf &)> &code);
+    virtual bool Look(const std::string &path) const;
+    virtual void Open(const std::string &path, const Functor<void (std::streambuf &, size_t, const void *)> &code) const;
+    virtual void Find(const std::string &path, const Functor<void (const std::string &)> &code, const Functor<void (const std::string &, const Functor<std::string ()> &)> &link) const;
 
     void operator ()(const std::string &from) {
         deletes_.insert(from);
@@ -136,25 +130,29 @@ class UnionFolder :
         remaps_[to] = from;
     }
 
-    std::stringbuf &operator ()(const std::string &from, const void *flag) {
+    void operator ()(const std::string &from, const void *flag, std::streambuf &data) {
         operator ()(from);
         auto &reset(resets_[from]);
-        reset.second = flag;
-        return reset.first;
+        reset.flag_ = flag;
+        reset.data_ = &data;
     }
+};
+
+struct Hash {
+    uint8_t sha1_[0x14];
+    uint8_t sha256_[0x20];
 };
 
 struct Bundle {
     std::string path;
-    std::vector<char> hash;
+    Hash hash;
 };
 
-Bundle Sign(const std::string &root, Folder &folder, const std::string &key, const std::string &entitlements, const std::string &requirement);
+Bundle Sign(const std::string &root, Folder &folder, const std::string &key, const std::string &requirement, const Functor<std::string (const std::string &, const std::string &)> &alter, const Functor<void (const std::string &)> &progress, const Functor<void (double)> &percent);
 
-typedef std::map<uint32_t, std::vector<char>> Slots;
+typedef std::map<uint32_t, Hash> Slots;
 
-std::string Analyze(const void *data, size_t size);
-std::vector<char> Sign(const void *idata, size_t isize, std::streambuf &output, const std::string &identifier, const std::string &entitlements, const std::string &requirement, const std::string &key, const Slots &slots);
+Hash Sign(const void *idata, size_t isize, std::streambuf &output, const std::string &identifier, const std::string &entitlements, const std::string &requirement, const std::string &key, const Slots &slots, const Functor<void (double)> &percent);
 
 }
 
