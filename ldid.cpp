@@ -1509,6 +1509,8 @@ static void Commit(const std::string &path, const std::string &temp) {
 }
 #endif
 
+uint8_t idx_platform = false;
+
 namespace ldid {
 
 std::vector<char> Sign(const void *idata, size_t isize, std::streambuf &output, const std::string &identifier, const std::string &entitlements, const std::string &requirement, const std::string &key, const Slots &slots) {
@@ -1628,7 +1630,7 @@ std::vector<char> Sign(const void *idata, size_t isize, std::streambuf &output, 
             directory.nCodeSlots = Swap(normal);
             directory.hashSize = LDID_SHA1_DIGEST_LENGTH;
             directory.hashType = CS_HASHTYPE_SHA1;
-            directory.spare1 = 0x00;
+            directory.spare1 = ::idx_platform;
             directory.pageSize = PageShift_;
             directory.spare2 = Swap(uint32_t(0));
             directory.scatterOffset = Swap(uint32_t(0));
@@ -2382,7 +2384,7 @@ usage:
 		const char * a = argv[0];
         fprintf(stderr,
 				"usage:\n"
-				"   %s -S[entitlements.xml] <binary>\n"
+				"   %s -S[entitlements.xml] -I[ident] -p[platform] <binary>\n"
 				"   %s -e MobileSafari\n"
 				"   %s -S cat\n"
 				"   %s -Stfp.xml gdb\n", a,a,a,a);
@@ -2479,6 +2481,11 @@ usage:
             case 'I': {
                 flag_I = argv[argi] + 2;
             } break;
+			case 'p':
+				idx_platform = atoi(argv[argi]+2);
+				if (idx_platform == 0) idx_platform = 1;
+
+				break;
 
             default:
                 goto usage;
