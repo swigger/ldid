@@ -6,6 +6,7 @@ IOSCFLAGS=-I../build-openssl-on-ios/bin/iOS/include
 IOSCXXFLAGS=$(IOSCFLAGS)
 IOSLDFLAGS=-L../build-openssl-on-ios/bin/iOS/lib -lcrypto -lc++
 IOSC=xcrun -sdk iphoneos clang -miphoneos-version-min=8.4 -arch arm64
+IOSC=aarch64-apple-darwin-gcc -miphoneos-version-min=8.4 -arch arm64
 
 MACOSCFLAGS=$(shell pkg-config --cflags openssl)
 MACOSCXXFLAGS=$(MACOSCFLAGS)
